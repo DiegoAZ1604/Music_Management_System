@@ -16,6 +16,8 @@ import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -31,23 +33,15 @@ public class frmGestor extends javax.swing.JFrame {
     private final Color texto_oscuro = Color.WHITE;
     private boolean modoOscuroActivo = false;
     
-    public frmGestor() {
+    public frmGestor() throws SQLException {
         initComponents();
         //inicializador de array y tablas
         lAlbum = new ArrayList<>();
         modeloAlbum = (DefaultTableModel) this.jTableAlbum.getModel();
         modeloCancion = (DefaultTableModel) this.jTableCancion.getModel();
-        Album album1 = new Album("Utopia", "Travis Scott", "Hip Hop");
-        Album album2 = new Album("Days Before Rodeo", "Travis Scott", "Hip Hop");
-        lAlbum.add(album1);
-        lAlbum.add(album2);
-        Cancion cancion1 = new Cancion("Hyena", 3.55);
-        Cancion cancion2 = new Cancion("Skyfall", 3.25);
-        album1.getlCancion().add(cancion1);
-        album2.getlCancion().add(cancion2);
         actualizarTabla();
         modeloCancion.getDataVector().removeAllElements();
-        oCon = new Conexion("192.168.1.26", "FREE", "C##java", "oracle");
+        oCon = new Conexion("192.168.1.33", "FREE", "C###diego", "oracle");
         this.consultar();
         this.poblarTabla();
     }
@@ -550,27 +544,27 @@ public class frmGestor extends javax.swing.JFrame {
         try {
             Scanner scanner = new Scanner(new File(filePath));
             String[] header = scanner.nextLine().split(",");
-            List<Album> albums = new ArrayList<>();
-            Album currentAlbum = null;
 
             while (scanner.hasNextLine()) {
                 String[] values = scanner.nextLine().split(",");
                 String albumName = values[0];
                 String artist = values[1];
-                String genre = values[2];
+                String genero = values[2];
                 String songName = values[3];
                 double duration = Double.parseDouble(values[4]);
 
-                if (currentAlbum == null || !currentAlbum.getNombreAlbum().equals(albumName)) {
-                    currentAlbum = new Album(albumName, artist, genre);
-                    albums.add(currentAlbum);
+                // Buscar si el álbum ya existe
+                int albumID = BuscarAlbumExistente(albumName, artist, genero);
+
+                if (albumID == -1) {
+                    // Si el álbum no existe, insertarlo en la base de datos
+                    albumID = oCon.insertarAlbum(albumName, artist, genero);
                 }
 
-                Cancion song = new Cancion(songName, duration);
-                currentAlbum.getlCancion().add(song);
+                // Insertar la canción en la base de datos
+                oCon.insertarCancion(songName, duration, albumID);
             }
 
-            lAlbum.addAll(albums);
             actualizarTabla();
 
             System.out.println("Importación completada.");
@@ -579,6 +573,9 @@ public class frmGestor extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Error en importar archivo!");
         }
     }
+
+
+
     
     private void activarModoOscuro() {
         this.getContentPane().setBackground(fondo_oscuro);
@@ -648,32 +645,49 @@ public class frmGestor extends javax.swing.JFrame {
     }//GEN-LAST:event_jTableCancionMouseClicked
 
     private void bttnAgregarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttnAgregarActionPerformed
-        //recibe el input del album
+        // Recibe el input del álbum
         String NombreAlbum = txtNombreAlbum.getText().trim();
         String ArtistaAlbum = txtArtista.getText().trim();
         String GeneroAlbum = txtGenero.getText().trim();
 
-        //busca si hay algun album existente con metodo declarado
+        // Busca si hay algún álbum existente con el método declarado
         int indiceAlbumExistente = BuscarAlbumExistente(NombreAlbum, ArtistaAlbum, GeneroAlbum);
         String NombreCancion = txtNombreCancion.getText().trim();
         double DuracionCancion;
-        try{
+        try {
             DuracionCancion = Double.parseDouble(txtDuracion.getText().trim());
-        }
-        catch(Exception ee){JOptionPane.showMessageDialog(this, "La duración debe ser un número válido");
+        } catch (Exception ee) {
+            JOptionPane.showMessageDialog(this, "La duración debe ser un número válido");
             return;
         }
-        if (indiceAlbumExistente !=  -1) {
-            Cancion cancion = new Cancion(NombreCancion, DuracionCancion);
-            lAlbum.get(indiceAlbumExistente).getlCancion().add(cancion);
-        } else {
-            Album NuevoAlbum = new Album(NombreAlbum, ArtistaAlbum, GeneroAlbum);
-            Cancion cancion = new Cancion(NombreCancion, DuracionCancion);
-            NuevoAlbum.getlCancion().add(cancion);
-            lAlbum.add(NuevoAlbum);
+
+        try {
+            if (indiceAlbumExistente != -1) {
+                int albumID = lAlbum.get(indiceAlbumExistente).getAlbumID();
+                String queryInsertCancion = "INSERT INTO Canciones (NombreCancion, Duracion, AlbumID) VALUES (?, ?, ?)";
+                Object[] paramsCancion = {NombreCancion, DuracionCancion, albumID};
+
+                // Insertar la canción en la base de datos
+                oCon.insertarCancion(NombreCancion, DuracionCancion, albumID);
+
+                // Agregar la canción al álbum existente
+                lAlbum.get(indiceAlbumExistente).agregarCancion(new Cancion(NombreCancion, DuracionCancion));
+            } else {
+                // Insertar un nuevo álbum en la base de datos y obtener su ID
+                int albumIDGenerado = oCon.insertarAlbum(NombreAlbum, ArtistaAlbum, GeneroAlbum);
+
+                // Crear el nuevo álbum con el ID generado
+                Album nuevoAlbum = new Album(albumIDGenerado, NombreAlbum, ArtistaAlbum, GeneroAlbum);
+                lAlbum.add(nuevoAlbum);
+            }
+
+            limpiarCampos();
+            actualizarTabla();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error al insertar en la base de datos.");
         }
-        limpiarCampos();
-        actualizarTabla();
+
     }//GEN-LAST:event_bttnAgregarActionPerformed
 
     private void bttnBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttnBuscarActionPerformed
@@ -707,20 +721,34 @@ public class frmGestor extends javax.swing.JFrame {
     private void consultar() {
         try {
             this.lAlbum.clear();
-            ArrayList<Object[]> tmpResultado = this.oCon.consultar("SELECT * FROM album");
+            ArrayList<Object[]> tmpResultado = this.oCon.consultar("SELECT * FROM Albums");
             if (tmpResultado != null) {
                 for (Object[] dato : tmpResultado) {
-                    String sNombreAlbum = dato[0].toString();
-                    String sArtistaAlbum = dato[1].toString();
-                    String sGeneroAlbum = dato[2].toString();
-                    this.lAlbum.add(new Album(sNombreAlbum, sArtistaAlbum, sGeneroAlbum));
+                    int albumID = Integer.parseInt(dato[0].toString());
+                    String sNombreAlbum = dato[1].toString();
+                    String sArtistaAlbum = dato[2].toString();
+                    String sGeneroAlbum = dato[3].toString();
+                    
+                    Album album = new Album (albumID, sNombreAlbum, sArtistaAlbum, sGeneroAlbum);
+                    this.lAlbum.add(album);
+                    
+                    ArrayList<Object[]> tmpCanciones = this.oCon.consultar("SELECT * FROM Canciones WHERE AlbumID = " + album.getAlbumID());
+                    if (tmpCanciones != null) {
+                        for(Object[] cancionData: tmpCanciones){
+                            String sNombreCancion = cancionData[1].toString();
+                            double dDuracion = Double.parseDouble(cancionData[2].toString());
+                            
+                            Cancion cancion = new Cancion(sNombreCancion, dDuracion);
+                            album.agregarCancion(cancion);
+                        }
+                    }
                 }
             } else {
                 System.out.println("La consulta no devolvió resultados.");
             }
         } catch (Exception ee) {
             ee.printStackTrace();
-            System.out.println("Error consultando de form: " + ee.getMessage());
+            System.out.println("Error consultando desde el formulario: " + ee.getMessage());
         }
     }
 
@@ -765,7 +793,11 @@ public class frmGestor extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new frmGestor().setVisible(true);
+                try {
+                    new frmGestor().setVisible(true);
+                } catch (SQLException ex) {
+                    Logger.getLogger(frmGestor.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
     }
