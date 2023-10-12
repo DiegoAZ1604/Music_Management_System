@@ -6,18 +6,18 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 
 /**
  *
@@ -27,23 +27,27 @@ public class frmGestor extends javax.swing.JFrame {
 
     Conexion oCon;
     ArrayList<Album> lAlbum;
+    ArrayList<Integer> lIDsAlbumes;
     DefaultTableModel modeloAlbum;
     DefaultTableModel modeloCancion;
     private final Color fondo_oscuro = new Color(30, 30, 30);
     private final Color texto_oscuro = Color.WHITE;
     private boolean modoOscuroActivo = false;
+    Cifrado cifrador;
+
     
     public frmGestor() throws SQLException {
         initComponents();
         //inicializador de array y tablas
         lAlbum = new ArrayList<>();
+        lIDsAlbumes = new ArrayList<>();
         modeloAlbum = (DefaultTableModel) this.jTableAlbum.getModel();
         modeloCancion = (DefaultTableModel) this.jTableCancion.getModel();
-        actualizarTabla();
+        cifrador = new Cifrado("diegogo");
         modeloCancion.getDataVector().removeAllElements();
-        oCon = new Conexion("192.168.1.33", "FREE", "C###diego", "oracle");
+        oCon = new Conexion("172.20.10.7", "FREE", "C###diego", "oracle");
         this.consultar();
-        this.poblarTabla();
+        actualizarTabla();
     }
 
     /**
@@ -91,6 +95,8 @@ public class frmGestor extends javax.swing.JFrame {
         jLabel8 = new javax.swing.JLabel();
         bttnBuscar = new javax.swing.JButton();
         txtBuscar = new javax.swing.JTextField();
+        bttnCalcular1 = new javax.swing.JButton();
+        bttnActualizar = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -225,63 +231,62 @@ public class frmGestor extends javax.swing.JFrame {
             }
         });
 
+        bttnCalcular1.setText("Limpiar Campos");
+        bttnCalcular1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bttnCalcular1ActionPerformed(evt);
+            }
+        });
+
+        bttnActualizar.setText("Actualizar");
+        bttnActualizar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bttnActualizarActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(bttnModoOscuro)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(bttnCalcular1)
+                .addGap(675, 675, 675))
             .addGroup(layout.createSequentialGroup()
                 .addGap(14, 14, 14)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel1)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(6, 6, 6)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(txtNombreAlbum, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(bttnModoOscuro))
-                        .addGap(17, 17, 17)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(jLabel10)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(txtCalcular, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(bttnCalcular))
-                                .addComponent(jLabel9)
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(jLabel11)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(txtShowMinutos, javax.swing.GroupLayout.PREFERRED_SIZE, 56, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGap(18, 18, 18)
-                                    .addComponent(jLabel12)))
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(txtArtista, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel3))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel4)
+                            .addComponent(txtGenero, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(txtNombreCancion, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(jLabel1)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGap(6, 6, 6)
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                            .addComponent(txtNombreAlbum, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                                .addGap(18, 18, 18)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(txtArtista, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jLabel3))
-                                .addGap(18, 18, 18)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel4)
-                                    .addComponent(txtGenero, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(txtNombreCancion, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(18, 18, 18)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel7)
-                                    .addComponent(txtDuracion, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addComponent(bttnAgregar)
-                            .addComponent(jLabel5))
-                        .addGap(63, 63, 63)
+                            .addComponent(jLabel7)
+                            .addComponent(txtDuracion, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(bttnAgregar)
+                    .addComponent(jLabel5))
+                .addGap(63, 63, 63)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addGap(6, 6, 6)
@@ -296,47 +301,53 @@ public class frmGestor extends javax.swing.JFrame {
                                     .addGap(18, 18, 18)
                                     .addComponent(bttnBuscar)))
                             .addComponent(jLabel13))
-                        .addGap(92, 92, 92)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(bttnHMTL, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(bttnExCSV, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(bttnInCSV, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel14)
-                                .addGap(0, 0, Short.MAX_VALUE)))))
-                .addGap(15, 15, 15))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addComponent(bttnInCSV, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jLabel14, javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(bttnExCSV, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(bttnHMTL, javax.swing.GroupLayout.DEFAULT_SIZE, 176, Short.MAX_VALUE))
+                            .addComponent(bttnActualizar, javax.swing.GroupLayout.Alignment.TRAILING)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(6, 6, 6)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jLabel9)
+                                .addGroup(layout.createSequentialGroup()
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(jLabel11)
+                                        .addComponent(jLabel10))
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(layout.createSequentialGroup()
+                                            .addComponent(txtCalcular, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addGap(18, 18, 18)
+                                            .addComponent(bttnCalcular))
+                                        .addGroup(layout.createSequentialGroup()
+                                            .addComponent(txtShowMinutos, javax.swing.GroupLayout.PREFERRED_SIZE, 56, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                            .addComponent(jLabel12)))))))))
+            .addGroup(layout.createSequentialGroup()
+                .addGap(5, 5, 5)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 461, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(74, 74, 74)
-                                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(25, 25, 25))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(jLabel14)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel13)
-                                .addGap(9, 9, 9)
-                                .addComponent(bttnAsc)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(bttnDesc))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(1, 1, 1)
-                                .addComponent(bttnExCSV, javax.swing.GroupLayout.DEFAULT_SIZE, 25, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(bttnInCSV, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(bttnHMTL, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGap(16, 16, 16))))
+                        .addComponent(jLabel1)
+                        .addGap(80, 80, 80)
+                        .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(25, 25, 25)
+                        .addComponent(jLabel13)
+                        .addGap(9, 9, 9)
+                        .addComponent(bttnAsc)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(bttnDesc))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
@@ -352,25 +363,37 @@ public class frmGestor extends javax.swing.JFrame {
                                     .addComponent(txtGenero, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(txtBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(bttnBuscar)))
-                            .addComponent(jLabel3))
-                        .addGap(22, 22, 22)
-                        .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jLabel3)
+                            .addComponent(bttnActualizar))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel6)
+                                .addGap(22, 22, 22)
+                                .addComponent(jLabel5)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtNombreCancion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(jLabel6)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(txtNombreCancion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(jLabel7)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(txtDuracion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(18, 18, 18)
+                                .addComponent(bttnAgregar))
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel7)
+                                .addGap(31, 31, 31)
+                                .addComponent(jLabel14)
+                                .addGap(13, 13, 13)
+                                .addComponent(bttnExCSV, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtDuracion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(18, 18, 18)
-                        .addComponent(bttnAgregar)
-                        .addGap(18, 18, Short.MAX_VALUE)))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(bttnInCSV, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(bttnHMTL, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
+                .addGap(12, 12, 12)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 247, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
                 .addComponent(jLabel9)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -383,8 +406,9 @@ public class frmGestor extends javax.swing.JFrame {
                     .addComponent(jLabel11)
                     .addComponent(jLabel12)
                     .addComponent(txtShowMinutos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(bttnModoOscuro))
-                .addGap(11, 11, 11))
+                    .addComponent(bttnModoOscuro)
+                    .addComponent(bttnCalcular1))
+                .addGap(23, 23, 23))
         );
 
         pack();
@@ -417,24 +441,37 @@ public class frmGestor extends javax.swing.JFrame {
             System.out.println("Archivo seleccionado: " + selectedFile.getAbsolutePath());
 
             try (PrintWriter pw = new PrintWriter(selectedFile)) {
-                pw.println("Album, Artista, Género, Canción, Duración"); // Encabezados
+                pw.println("Album, Artista, Género, Canción, Duración, AlbumID"); // Encabezados
 
-                for (Album AlbTemp : lAlbum) {
-                    for (Cancion cancion : AlbTemp.getlCancion()) {
-                        pw.println(AlbTemp.getNombreAlbum() + ","
-                            + AlbTemp.getArtistaAlbum() + ","
-                            + AlbTemp.getGeneroAlbum() + ","
-                            + cancion.getNombreCancion() + ","
-                            + cancion.getDuracionCancion());
+                try {
+                    // Obtener datos de la base de datos
+                    ArrayList<Object[]> data = oCon.consultar("SELECT a.NombreAlbum, a.Artista, a.Genero, c.NombreCancion, c.Duracion, c.AlbumID FROM Albums a, Canciones c WHERE a.AlbumID = c.AlbumID");
+
+                    // Escribir los datos en el archivo CSV
+                    for (Object[] row : data) {
+                        String nombreAlbumEncriptado = cifrador.encriptar(row[0].toString());
+                        String artistaEncriptado = cifrador.encriptar(row[1].toString());
+                        String generoEncriptado = cifrador.encriptar(row[2].toString());
+
+                        pw.println(nombreAlbumEncriptado + "," + artistaEncriptado + "," + generoEncriptado + "," + row[3] + "," + row[4] + "," + row[5]);
                     }
+
+                    pw.checkError();
+                    JOptionPane.showMessageDialog(this, "Archivo exportado correctamente!");
+
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Error al obtener datos de la base de datos!");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Error al encriptar datos!");
                 }
-                pw.checkError();
-                JOptionPane.showMessageDialog(this, "Archivo exportado correctamente!");
+
             } catch (IOException e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Ups, error en exportar archivo!");
             }
-        }
+        }    
     }//GEN-LAST:event_bttnExCSVActionPerformed
 
     private void bttnInCSVActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttnInCSVActionPerformed
@@ -448,7 +485,7 @@ public class frmGestor extends javax.swing.JFrame {
             importarCSV(selectedFile.getAbsolutePath());
         }
         actualizarTabla();
-        JOptionPane.showMessageDialog(this, "Archivo importado correctamente!");
+        
     }//GEN-LAST:event_bttnInCSVActionPerformed
 
     private void bttnHMTLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttnHMTLActionPerformed
@@ -493,30 +530,43 @@ public class frmGestor extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_bttnHMTLActionPerformed
-    
+
     
     private void actualizarTabla() {
+//        modeloCancion.setRowCount(0); // Limpiar la tabla de canciones
+//        modeloAlbum.setRowCount(0); // Limpiar la tabla de álbumes
+//        for (Album album : lAlbum) {
+//            for (Cancion cancion : album.getlCancion()) {
+//                modeloCancion.addRow(new Object[]{cancion.getNombreCancion(), cancion.getDuracionCancion(), album.getNombreAlbum()});
+//            }
+//            modeloAlbum.addRow(new Object[]{album.getNombreAlbum(), album.getArtistaAlbum(), album.getGeneroAlbum()});
+//        }
+//        this.limpiarCampos();
         modeloCancion.setRowCount(0); // Limpiar la tabla de canciones
         modeloAlbum.setRowCount(0); // Limpiar la tabla de álbumes
-        for (Album album : lAlbum) {
-            for (Cancion cancion : album.getlCancion()) {
-                modeloCancion.addRow(new Object[]{cancion.getNombreCancion(), cancion.getDuracionCancion(), album.getNombreAlbum()});
+
+        try {
+            // Obtener datos de álbumes y canciones desde la base de datos
+            ArrayList<Object[]> albumData = oCon.consultar("SELECT NombreAlbum, Artista, Genero FROM Albums");
+            ArrayList<Object[]> cancionData = oCon.consultar("SELECT NombreCancion, Duracion, AlbumID FROM Canciones");
+
+            // Llenar la tabla de álbumes
+            for (Object[] row : albumData) {
+                modeloAlbum.addRow(row);
             }
-            modeloAlbum.addRow(new Object[]{album.getNombreAlbum(), album.getArtistaAlbum(), album.getGeneroAlbum()});
-        }
-        this.limpiarCampos();
-    }
-    
-    private int BuscarAlbumExistente(String NombreAlbum, String ArtistaAlbum, String GeneroAlbum) {
-        for (int i = 0; i < lAlbum.size(); i++) {
-            Album album = lAlbum.get(i);
-            if (album.getNombreAlbum().equals(NombreAlbum)
-                    && album.getArtistaAlbum().equals(ArtistaAlbum)
-                    && album.getGeneroAlbum().equals(GeneroAlbum)) {
-                return i;
+
+            // Llenar la tabla de canciones
+            for (Object[] row : cancionData) {
+                modeloCancion.addRow(row);
             }
+
+            this.limpiarCampos();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error al actualizar la tabla.");
         }
-        return -1;
+
     }
     
     private void limpiarCampos() {
@@ -539,44 +589,53 @@ public class frmGestor extends javax.swing.JFrame {
         }
         return totalDuracion;
     }
-    
-    private void importarCSV(String filePath) {
-        try {
-            Scanner scanner = new Scanner(new File(filePath));
-            String[] header = scanner.nextLine().split(",");
+    /*MODIFIQUE TODO EL  METODO IMPORTARCSV*/
+private void importarCSV(String filePath) {
+    try (Scanner scanner = new Scanner(new File(filePath))) {
+        String[] header = scanner.nextLine().split(",");
+        while (scanner.hasNextLine()) {
+            String[] values = scanner.nextLine().split(",");
+            String NombreAlbumEncriptado = values[0];
+            String ArtistaAlbumEncriptado = values[1];
+            String GeneroAlbumEncriptado = values[2];
+            String NombreCancion = values[3];
+            Double DuracionCancion = Double.parseDouble(values[4]);
 
-            while (scanner.hasNextLine()) {
-                String[] values = scanner.nextLine().split(",");
-                String albumName = values[0];
-                String artist = values[1];
-                String genero = values[2];
-                String songName = values[3];
-                double duration = Double.parseDouble(values[4]);
+            // Desencriptar los nombres del álbum, artista y género
+            String NombreAlbum = cifrador.desencriptar(NombreAlbumEncriptado);
+            String ArtistaAlbum = cifrador.desencriptar(ArtistaAlbumEncriptado);
+            String GeneroAlbum = cifrador.desencriptar(GeneroAlbumEncriptado);
 
-                // Buscar si el álbum ya existe
-                int albumID = BuscarAlbumExistente(albumName, artist, genero);
-
-                if (albumID == -1) {
-                    // Si el álbum no existe, insertarlo en la base de datos
-                    albumID = oCon.insertarAlbum(albumName, artist, genero);
-                }
-
-                // Insertar la canción en la base de datos
-                oCon.insertarCancion(songName, duration, albumID);
+            // Verificar si el álbum ya existe o lo inserta
+            int albumID = oCon.BuscarAlbumExistente(NombreAlbum, ArtistaAlbum, GeneroAlbum);
+            if (albumID == -1) {
+                // Si el álbum no existe, lo inserta
+                albumID = oCon.insertarAlbum(NombreAlbum, ArtistaAlbum, GeneroAlbum);
             }
 
+            // Insertar la canción en la base de datos utilizando el ID del álbum
+            oCon.insertarCancion(NombreCancion, DuracionCancion, albumID);
             actualizarTabla();
-
-            System.out.println("Importación completada.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error en importar archivo!");
         }
+        actualizarTabla();
+        JOptionPane.showMessageDialog(this, "Archivo importado correctamente");
+    } catch (FileNotFoundException e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Archivo no encontrado");
+    } catch (SQLException e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Error en la base de datos");
+    } catch (NumberFormatException e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Error al convertir datos");
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Error desconocido");
     }
+}
 
 
 
-    
     private void activarModoOscuro() {
         this.getContentPane().setBackground(fondo_oscuro);
         this.bttnModoOscuro.setBackground(fondo_oscuro);
@@ -605,7 +664,7 @@ public class frmGestor extends javax.swing.JFrame {
             }
         }
     }
-
+    
     private void restoreDefaultColors(Component comp) {
         comp.setBackground(null);
         comp.setForeground(null);
@@ -619,16 +678,27 @@ public class frmGestor extends javax.swing.JFrame {
     
     private void jTableAlbumMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableAlbumMouseClicked
         int indiceAlbum = this.jTableAlbum.getSelectedRow();
-        int cantCanciones = this.lAlbum.get(indiceAlbum).getlCancion().size();
-        modeloCancion.getDataVector().removeAllElements();
-        Album AlbumSeleccionado = this.lAlbum.get(indiceAlbum);
-        this.txtNombreAlbum.setText(AlbumSeleccionado.getNombreAlbum());
-        this.txtArtista.setText(AlbumSeleccionado.getArtistaAlbum());
-        this.txtGenero.setText(AlbumSeleccionado.getGeneroAlbum());
-        for (int indiceCancion = 0; indiceCancion < cantCanciones; indiceCancion++) {
-            String[] registroCanciones = {this.lAlbum.get(indiceAlbum).getlCancion().get(indiceCancion).getNombreCancion(),
-                Double.toString(this.lAlbum.get(indiceAlbum).getlCancion().get(indiceCancion).getDuracionCancion())};
-            modeloCancion.addRow(registroCanciones);
+
+        if (indiceAlbum != -1) { // Verifica si se ha seleccionado una fila válida
+            // Obtiene el ID del álbum seleccionado
+            int albumID = lAlbum.get(indiceAlbum).getAlbumID();
+
+            // Ahora puedes usar este albumID en otros métodos según sea necesario.
+            // ...
+            // Continúa mostrando los detalles del álbum como lo hacías anteriormente
+            int cantCanciones = this.lAlbum.get(indiceAlbum).getlCancion().size();
+            modeloCancion.getDataVector().removeAllElements();
+            Album AlbumSeleccionado = this.lAlbum.get(indiceAlbum);
+            this.txtNombreAlbum.setText(AlbumSeleccionado.getNombreAlbum());
+            this.txtArtista.setText(AlbumSeleccionado.getArtistaAlbum());
+            this.txtGenero.setText(AlbumSeleccionado.getGeneroAlbum());
+            for (int indiceCancion = 0; indiceCancion < cantCanciones; indiceCancion++) {
+                String[] registroCanciones = {
+                    this.lAlbum.get(indiceAlbum).getlCancion().get(indiceCancion).getNombreCancion(),
+                    Double.toString(this.lAlbum.get(indiceAlbum).getlCancion().get(indiceCancion).getDuracionCancion())
+                };
+                modeloCancion.addRow(registroCanciones);
+            }
         }
     }//GEN-LAST:event_jTableAlbumMouseClicked
 
@@ -639,129 +709,157 @@ public class frmGestor extends javax.swing.JFrame {
             desactivarModoOscuro();
         }
     }//GEN-LAST:event_bttnModoOscuroActionPerformed
-
+    
     private void jTableCancionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableCancionMouseClicked
 
     }//GEN-LAST:event_jTableCancionMouseClicked
-
+/*PARTE CORREGIDA ESTAN COMENTADO LOS CAMBIOS O FUNCIONES*/
     private void bttnAgregarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttnAgregarActionPerformed
-        // Recibe el input del álbum
+        // Obtén los valores de los campos de texto
         String NombreAlbum = txtNombreAlbum.getText().trim();
         String ArtistaAlbum = txtArtista.getText().trim();
         String GeneroAlbum = txtGenero.getText().trim();
-
-        // Busca si hay algún álbum existente con el método declarado
-        int indiceAlbumExistente = BuscarAlbumExistente(NombreAlbum, ArtistaAlbum, GeneroAlbum);
         String NombreCancion = txtNombreCancion.getText().trim();
-        double DuracionCancion;
+        double DuracionCancion = 0.0;
+
         try {
+            // Verifica si la duración de la canción es un número válido
             DuracionCancion = Double.parseDouble(txtDuracion.getText().trim());
-        } catch (Exception ee) {
+        } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "La duración debe ser un número válido");
             return;
         }
 
         try {
+            // Busca si hay algún álbum existente con el método declarado
+            int indiceAlbumExistente = oCon.BuscarAlbumExistente(NombreAlbum, ArtistaAlbum, GeneroAlbum);
+
             if (indiceAlbumExistente != -1) {
-                int albumID = lAlbum.get(indiceAlbumExistente).getAlbumID();
-                String queryInsertCancion = "INSERT INTO Canciones (NombreCancion, Duracion, AlbumID) VALUES (?, ?, ?)";
-                Object[] paramsCancion = {NombreCancion, DuracionCancion, albumID};
+                // Si el álbum existe, obtén su ID desde la base de datos
+                int albumID = oCon.obtenerIDAlbumDesdeBD(NombreAlbum, ArtistaAlbum, GeneroAlbum);
 
-                // Insertar la canción en la base de datos
-                oCon.insertarCancion(NombreCancion, DuracionCancion, albumID);
+                if (albumID != -1) {
+                    // Inserta la canción en el álbum correspondiente en la base de datos
+                    agregarCancionAAbum(albumID, NombreCancion, DuracionCancion);
 
-                // Agregar la canción al álbum existente
-                lAlbum.get(indiceAlbumExistente).agregarCancion(new Cancion(NombreCancion, DuracionCancion));
+                    // Actualiza el modelo de la tabla
+                    actualizarTabla();
+                    //actualizarTabla1();
+
+                    // Refresca la vista de la tabla
+                    jTableCancion.repaint();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error al obtener el ID del álbum.");
+                }
             } else {
-                // Insertar un nuevo álbum en la base de datos y obtener su ID
+                // Si el álbum no existe, inserta un nuevo álbum en la base de datos
                 int albumIDGenerado = oCon.insertarAlbum(NombreAlbum, ArtistaAlbum, GeneroAlbum);
 
-                // Crear el nuevo álbum con el ID generado
-                Album nuevoAlbum = new Album(albumIDGenerado, NombreAlbum, ArtistaAlbum, GeneroAlbum);
-                lAlbum.add(nuevoAlbum);
+                if (albumIDGenerado != -1) {
+                    // Inserta la canción en el nuevo álbum
+                    agregarCancionAAbum(albumIDGenerado, NombreCancion, DuracionCancion);
+
+                    // Actualiza el modelo de la tabla
+                    actualizarTabla();
+                    //actualizarTabla1();
+
+                    // Refresca la vista de la tabla
+                    jTableAlbum.repaint();
+                    jTableCancion.repaint();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error al insertar el nuevo álbum.");
+                }
             }
 
+            // Limpia los campos
             limpiarCampos();
-            actualizarTabla();
+
         } catch (SQLException ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error al insertar en la base de datos.");
+            JOptionPane.showMessageDialog(this, "Error al interactuar con la base de datos.");
         }
-
+     
     }//GEN-LAST:event_bttnAgregarActionPerformed
-
-    private void bttnBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttnBuscarActionPerformed
-        this.modeloAlbum.setRowCount(0);
-        this.modeloCancion.setRowCount(0);
-
-        String buscarAlbum = this.txtBuscar.getText().trim();
-        boolean encontrado = false;
-
-        for (Album album : lAlbum) {
-            if (album.getNombreAlbum().equals(buscarAlbum)) {
-                String[] registro = {album.getNombreAlbum(), album.getArtistaAlbum(), album.getGeneroAlbum()};
-                this.modeloAlbum.addRow(registro);
-                encontrado = true;
-                // Almacenar las canciones del álbum en una lista temporal
-                ArrayList<Cancion> cancionesDelAlbum = album.getlCancion();
-                // Agregar cada canción a la tabla de canciones
-                for (Cancion cancion : cancionesDelAlbum) {
-                    String[] registroCancion = {cancion.getNombreCancion(), String.valueOf(cancion.getDuracionCancion())};
-                    this.modeloCancion.addRow(registroCancion);
-                }
-                break; // Encuentra el álbum, sale del bucle
-            }
-        }
-
-        if (!encontrado) {
-            JOptionPane.showMessageDialog(this, "Álbum no encontrado");
-        }
-    }//GEN-LAST:event_bttnBuscarActionPerformed
     
+    private void agregarCancionAAbum(int albumID, String nombreCancion, double duracionCancion) throws SQLException {
+        // Inserta la canción en el álbum correspondiente en la base de datos
+        oCon.insertarCancion(nombreCancion, duracionCancion, albumID);
+        
+        actualizarTabla();
+    }
+    
+    private void bttnBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttnBuscarActionPerformed
+       String buscarAlbum = this.txtBuscar.getText().trim();
+       boolean encontrado = false;
+
+    for (Album album : lAlbum) {
+        if (album.getNombreAlbum().equalsIgnoreCase(buscarAlbum)) {
+            // Limpia los modelos de tabla antes de agregar nuevos datos
+            this.modeloAlbum.setRowCount(0);
+            this.modeloCancion.setRowCount(0);
+
+            // Agrega los datos del álbum a la tabla de álbumes
+            String[] registroAlbum = {album.getNombreAlbum(), album.getArtistaAlbum(), album.getGeneroAlbum()};
+            this.modeloAlbum.addRow(registroAlbum);
+
+            // Agrega las canciones del álbum a la tabla de canciones
+            for (Cancion cancion : album.getlCancion()) {
+                String[] registroCancion = {cancion.getNombreCancion(), String.valueOf(cancion.getDuracionCancion())};
+                this.modeloCancion.addRow(registroCancion);
+            }
+
+            encontrado = true;
+            break;
+        }
+    }
+
+    if (!encontrado) {
+        JOptionPane.showMessageDialog(this, "Álbum no encontrado");
+    }
+    }//GEN-LAST:event_bttnBuscarActionPerformed
+
+    private void bttnCalcular1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttnCalcular1ActionPerformed
+        limpiarCampos();
+    }//GEN-LAST:event_bttnCalcular1ActionPerformed
+
+    private void bttnActualizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttnActualizarActionPerformed
+        actualizarTabla();
+    }//GEN-LAST:event_bttnActualizarActionPerformed
+    /*Cambié el tipo de datos del AlbumID y otros valores a int en lugar de usar Object.*/
     private void consultar() {
         try {
-            this.lAlbum.clear();
-            ArrayList<Object[]> tmpResultado = this.oCon.consultar("SELECT * FROM Albums");
-            if (tmpResultado != null) {
-                for (Object[] dato : tmpResultado) {
-                    int albumID = Integer.parseInt(dato[0].toString());
-                    String sNombreAlbum = dato[1].toString();
-                    String sArtistaAlbum = dato[2].toString();
-                    String sGeneroAlbum = dato[3].toString();
-                    
-                    Album album = new Album (albumID, sNombreAlbum, sArtistaAlbum, sGeneroAlbum);
-                    this.lAlbum.add(album);
-                    
-                    ArrayList<Object[]> tmpCanciones = this.oCon.consultar("SELECT * FROM Canciones WHERE AlbumID = " + album.getAlbumID());
-                    if (tmpCanciones != null) {
-                        for(Object[] cancionData: tmpCanciones){
-                            String sNombreCancion = cancionData[1].toString();
-                            double dDuracion = Double.parseDouble(cancionData[2].toString());
-                            
-                            Cancion cancion = new Cancion(sNombreCancion, dDuracion);
-                            album.agregarCancion(cancion);
-                        }
+        this.lAlbum.clear();
+        ArrayList<Object[]> tmpResultado = this.oCon.consultar("SELECT * FROM Albums");
+        if (tmpResultado != null) {
+            for (Object[] dato : tmpResultado) {
+                int albumID = Integer.parseInt(dato[0].toString());
+                String sNombreAlbum = dato[1].toString();
+                String sArtistaAlbum = dato[2].toString();
+                String sGeneroAlbum = dato[3].toString();
+
+                Album album = new Album(albumID, sNombreAlbum, sArtistaAlbum, sGeneroAlbum);
+                this.lAlbum.add(album);
+
+                ArrayList<Object[]> tmpCanciones = this.oCon.consultar("SELECT * FROM Canciones WHERE AlbumID = " + album.getAlbumID());
+                if (tmpCanciones != null) {
+                    for (Object[] cancionData : tmpCanciones) {
+                        String sNombreCancion = cancionData[1].toString();
+                        double dDuracion = Double.parseDouble(cancionData[2].toString());
+
+                        Cancion cancion = new Cancion(sNombreCancion, dDuracion);
+                        album.agregarCancion(cancion);
                     }
                 }
-            } else {
-                System.out.println("La consulta no devolvió resultados.");
             }
-        } catch (Exception ee) {
-            ee.printStackTrace();
-            System.out.println("Error consultando desde el formulario: " + ee.getMessage());
+        } else {
+            System.out.println("La consulta no devolvió resultados.");
         }
+    } catch (Exception ee) {
+        ee.printStackTrace();
+        System.out.println("Error consultando desde el formulario: " + ee.getMessage());
+    }
     }
 
-    
-    
-    private void poblarTabla(){
-        modeloAlbum.setRowCount(0);
-        
-        for (Album tmpAlbum : this.lAlbum){
-            Object[] rowData = {tmpAlbum.getNombreAlbum(), tmpAlbum.getArtistaAlbum(), tmpAlbum.getGeneroAlbum()};
-            modeloAlbum.addRow(rowData);
-        }
-    }
     
     /**
      * @param args the command line arguments
@@ -803,10 +901,12 @@ public class frmGestor extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton bttnActualizar;
     private javax.swing.JButton bttnAgregar;
     private javax.swing.JButton bttnAsc;
     private javax.swing.JButton bttnBuscar;
     private javax.swing.JButton bttnCalcular;
+    private javax.swing.JButton bttnCalcular1;
     private javax.swing.JButton bttnDesc;
     private javax.swing.JButton bttnExCSV;
     private javax.swing.JButton bttnHMTL;
